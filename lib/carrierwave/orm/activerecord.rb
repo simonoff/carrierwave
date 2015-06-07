@@ -81,6 +81,7 @@ module CarrierWave
           super
           self.remove_#{column} = true
           write_#{column}_identifier
+          self.remove_#{column} = false
         end
 
         # Reset cached mounter on record reload
