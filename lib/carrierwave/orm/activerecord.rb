@@ -62,6 +62,25 @@ module CarrierWave
       after_save :"store_previous_changes_for_#{column}"
       after_commit :"remove_previously_stored_#{column}", :on => :update
 
+      def write_uploader(column, identifier)
+        ar_store = self.class.stored_attributes.find { |_store, attributes| attributes.include?(column) }.try(:first)
+        if ar_store
+          __send__("#{ar_store}_will_change!".to_sym)
+          __send__(ar_store)[column.to_s] = identifier
+        else
+          write_attribute(column, identifier)
+        end
+      end
+
+      def read_uploader(column)
+        ar_store = self.class.stored_attributes.find { |_store, attributes| attributes.include?(column) }.try(:first)
+        if ar_store
+          __send__(ar_store)[column.to_s]
+        else
+          read_attribute(column)
+        end
+      end
+
       class_eval <<-RUBY, __FILE__, __LINE__+1
         def #{column}=(new_file)
           column = _mounter(:#{column}).serialization_column
